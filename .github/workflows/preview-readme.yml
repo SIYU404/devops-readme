@@ -1,0 +1,68 @@
+name: Preview README Changes (Matrix & Cron)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+      - '.github/workflows/**'
+  schedule:
+    # 每天午夜 00:00 UTC 自動執行排程檢查
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  preview:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.10', '3.11']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Dry-run Update README
+        run: |
+          echo "=== 正在測試環境: ${{ matrix.os }} / Python ${{ matrix.python-version }} ==="
+          
+          ACTIVITY=$(git log -n 3 --pretty=format:"- %ci: %s (%h)")
+          START="<!-- START_SECTION:activity -->"
+          END="<!-- END_SECTION:activity -->"
+
+          python3 -c "
+          with open('README.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          start = '$START'
+          end = '$END'
+
+          before = content.split(start)[0]
+          after = content.split(end)[1]
+          new_activity = '''$ACTIVITY'''
+
+          new_content = before + start + '\n' + new_activity + '\n' + end + after
+
+          with open('README.md', 'w', encoding='utf-8') as f:
+              f.write(new_content)
+          "
+
+      - name: Output README Diff (Preview Only)
+        run: |
+          echo "=== 變更預覽（Diff Preview）==="
+          git diff README.md
+          
+          # 將預覽結果輸出至 GitHub Actions 摘要 (Step Summary)，方便在 PR 頁面直接查看
+          echo "### 📄 README 變更預覽 (${{ matrix.os }} - Python ${{ matrix.python-version }})" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          git diff README.md >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
