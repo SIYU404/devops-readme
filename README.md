@@ -12,9 +12,9 @@ A game development project with automated CI/CD workflows and activity tracking.
 
 ##  Recent Repository Activity
 <!-- START_SECTION:activity -->
+- 2026-10-04 19:53:04 +0800: Add GitHub Actions workflow for README preview (d690f37)
+- 2026-10-04 11:52:59 +0000: docs: auto update README activity (903a00c)
 - 2026-10-04 11:52:50 +0000: docs: auto update README activity (ff25ccb)
-- 2026-10-04 11:52:44 +0000: docs: auto update README activity (b9fe3f3)
-- 2026-10-04 11:52:36 +0000: docs: auto update README activity (2f4967f)
 <!-- END_SECTION:activity -->
 
 ---
