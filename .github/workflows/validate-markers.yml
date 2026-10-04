@@ -1,0 +1,48 @@
+name: Validate README Markers
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check for Activity Markers
+        run: |
+          echo "=== 正在檢查 README.md 是否包含完整的活動標記 ==="
+          
+          START_MARKER="<!-- START_SECTION:activity -->"
+          END_MARKER="<!-- END_SECTION:activity -->"
+          
+          ERRORS=0
+          
+          if ! grep -Fq "$START_MARKER" README.md; then
+            echo "錯誤：找不到起始標記 $START_MARKER"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "通過：找到起始標記"
+          fi
+          
+          if ! grep -Fq "$END_MARKER" README.md; then
+            echo "錯誤：找不到結束標記 $END_MARKER"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "通過：找到結束標記"
+          fi
+          
+          if [ $ERRORS -ne 0 ]; then
+            echo "============================================="
+            echo "CI 驗證失敗：README 標記缺失，請補齊後再行提交！"
+            echo "============================================="
+            exit 1
+          fi
+          
+          echo "驗證成功：所有必要標記皆完整存在！"
