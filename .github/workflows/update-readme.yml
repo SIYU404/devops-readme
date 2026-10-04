@@ -1,0 +1,52 @@
+name: Auto Update README Activity
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0
+
+      - name: Update README with Recent Activity
+        run: |
+          # 1. 取得最近 3 筆 Commit 紀錄
+          ACTIVITY=$(git log -n 3 --pretty=format:"- %ci: %s (%h)")
+
+          # 2. 定義標記
+          START="<!-- START_SECTION:activity -->"
+          END="<!-- END_SECTION:activity -->"
+
+          # 3. 替換 README.md 標記內的內容
+          python3 -c "
+          with open('README.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          start = '$START'
+          end = '$END'
+
+          before = content.split(start)[0]
+          after = content.split(end)[1]
+          new_activity = '''$ACTIVITY'''
+
+          new_content = before + start + '\n' + new_activity + '\n' + end + after
+
+          with open('README.md', 'w', encoding='utf-8') as f:
+              f.write(new_content)
+          "
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: auto update README activity"
+          git push
